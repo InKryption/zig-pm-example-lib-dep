@@ -2,27 +2,14 @@ const std = @import("std");
 const Build = std.Build;
 
 pub fn build(b: *Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-
-    const exe = b.addExecutable(.{
-        .name = "zig-pm-example-lib-dep",
-        .root_source_file = Build.FileSource.relative("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+    // Basically, this is just the same as in the zig-pm-example-lib repository.
+    const dep_lib = b.addModule("zig-pm-example-lib-dep", .{
+        .source_file = Build.FileSource.relative("dep.zig"),
     });
-    b.installArtifact(exe);
-    const run_cmd = b.addRunArtifact(exe);
-    run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&run_cmd.step);
+
     const unit_tests = b.addTest(.{
-        .root_source_file = Build.FileSource.relative("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        // Since we're using a test which references all decls, the test are also being used there
+        .root_source_file = dep_lib.source_file,
     });
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
